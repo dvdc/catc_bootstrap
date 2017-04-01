@@ -1,5 +1,9 @@
 ---
 
+# user creds
 user: <your user>
-root_pass: <root hash>
 user_pass: <user hash>
+root_pass: <root hash>
+
+# IPs to whitelist for fail2ban
+ignore_ip: "127.0.0.1/8"

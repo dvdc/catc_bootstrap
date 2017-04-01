@@ -5,9 +5,13 @@
 
   tasks:
   - include_vars: ../vars/global.yml
+    tags:
+      - fail2ban_conf
 
   - name: update package cache
     apt: update_cache=true
+    tags:
+      - fail2ban_conf
 
   - name: install required packages
     apt: name={{ item }} update_cache=yes state=latest
@@ -19,6 +23,8 @@
     - tmux
     - fail2ban
     - git
+    tags:
+      - fail2ban_conf
 
 # Users
 
@@ -49,7 +55,7 @@
 # Config
 
   - name: configure fail2ban
-    copy: src=../files/{{ item }} dest=/etc/fail2ban/{{ item }}
+    template: src=../templates/{{ item }}.j2 dest=/etc/fail2ban/{{ item }}
     with_items:
       - jail.local
     tags:
