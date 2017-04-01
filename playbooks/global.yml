@@ -1,0 +1,62 @@
+---
+
+- hosts: all
+  become: yes
+
+  tasks:
+  - include_vars: ../vars/global.yml
+
+  - name: update package cache
+    apt: update_cache=true
+
+  - name: install required packages
+    apt: name={{ item }} update_cache=yes state=latest
+    with_items:
+    - vim
+    - curl
+    - apparmor
+    - apparmor-utils
+    - tmux
+    - fail2ban
+    - git
+
+# Users
+
+  - name: change root pass
+    user:
+      name: root
+      update_password: always
+      password: "{{ root_pass }}"
+
+  - name: add user {{ user }}
+    user:
+      name: "{{ user }}"
+      update_password: always
+      password: "{{ user_pass }}"
+      shell: /bin/bash
+
+  - name: add {{ user }} to sudoers
+    lineinfile: dest=/etc/sudoers line="{{ user }}    ALL=(ALL:ALL) ALL"
+
+# Disable cloud at cost user
+  - name: disable user
+    user:
+      name: user
+      uid: 1000
+      expires: 1
+      shell: /usr/sbin/nologin
+
+# Config
+
+  - name: configure fail2ban
+    copy: src=../files/{{ item }} dest=/etc/fail2ban/{{ item }}
+    with_items:
+      - jail.local
+    tags:
+    - fail2ban_conf
+    notify:
+    - restart fail2ban
+
+  handlers:
+    - name: restart fail2ban
+      service: name=fail2ban state=restarted
